@@ -1,138 +1,112 @@
 import img1 from "./img/money.png"
 import axios from "./services/httpService"
+import React, {useState, useEffect} from "react"
+import config from "./config"
+import SelectCurrency from "./components/selectCurrency";
 
 export default function App() {
 
+    const [currencies, setCurrencies] = useState({
+            c1: {
+                name: 'USD',
+                amount: 1
+            },
+            c2: {
+                name: 'USD',
+                amount: 1
+            },
+            rate: 1
+        },
+    )
+    const [currenciesList, setCurrenciesList] = useState([])
+
+    useEffect(async () => {
+            const rateFetched = await axios.get(config.urlAPI + currencies.c1.name)
+            const response = rateFetched.data
+            const newRate = (response.conversion_rates[currencies.c2.name]).toFixed(2)
+            setCurrencies((prevState) => ({
+                    ...prevState,
+                    rate: newRate
+                })
+            )
+            setCurrenciesList(response.conversion_rates)
+        },
+        []
+    )
+
+    const swap = () => {
+        setCurrencies(
+            {
+                rate: (1 / currencies.rate).toFixed(2),
+                c1: currencies.c2,
+                c2: currencies.c1,
+            })
+    }
+
+    const update = async (event) => {
+        const type = event.target.id
+        const value = event.target.value
+        const temp = currencies
+        if (type === 'currency-one') {
+            temp.c1.name = value
+            const rateFetched = await axios.get(config.urlAPI + currencies.c1.name)
+            const response = rateFetched.data
+            temp.rate = (response.conversion_rates[currencies.c2.name]).toFixed(2)
+            temp.c1.amount = temp.c2.amount / temp.rate
+        } else if (type === 'currency-two') {
+            temp.c2.name = value
+            const rateFetched = await axios.get(config.urlAPI + currencies.c1.name)
+            const response = rateFetched.data
+            temp.rate = (response.conversion_rates[currencies.c2.name]).toFixed(2)
+            temp.c2.amount = temp.c1.amount * temp.rate
+        } else if (type === 'amount-one') {
+            temp.c1.amount = value
+            temp.c2.amount = value * temp.rate
+        } else if (type === 'amount-two') {
+            temp.c2.amount = value
+            temp.c1.amount = value / temp.rate
+        }
+
+        setCurrencies(
+            {
+                c1: {
+                    name: temp.c1.name,
+                    amount: (+temp.c1.amount).toFixed(2)
+                },
+                c2: {
+                    name: temp.c2.name,
+                    amount: (+temp.c2.amount).toFixed(2)
+                },
+                rate: temp.rate
+            }
+        )
+    }
+
     return (
-        <body>
+        <body >
             <img src={img1} id="" className="money-img"/>
             <h1>Exchange Rate Calculator</h1>
             <p>Choose the currency and the amounts to get the exchange rate</p>
             <div className="container">
-                <div className="currency">
-                    <select id="currency-one">
-                        <option value="AED">AED</option>
-                        <option value="ARS">ARS</option>
-                        <option value="AUD">AUD</option>
-                        <option value="BGN">BGN</option>
-                        <option value="BRL">BRL</option>
-                        <option value="BSD">BSD</option>
-                        <option value="CAD">CAD</option>
-                        <option value="CHF">CHF</option>
-                        <option value="CLP">CLP</option>
-                        <option value="CNY">CNY</option>
-                        <option value="COP">COP</option>
-                        <option value="CZK">CZK</option>
-                        <option value="DKK">DKK</option>
-                        <option value="DOP">DOP</option>
-                        <option value="EGP">EGP</option>
-                        <option value="EUR">EUR</option>
-                        <option value="FJD">FJD</option>
-                        <option value="GBP">GBP</option>
-                        <option value="GTQ">GTQ</option>
-                        <option value="HKD">HKD</option>
-                        <option value="HRK">HRK</option>
-                        <option value="HUF">HUF</option>
-                        <option value="IDR">IDR</option>
-                        <option value="ILS">ILS</option>
-                        <option value="INR">INR</option>
-                        <option value="ISK">ISK</option>
-                        <option value="JPY">JPY</option>
-                        <option value="KRW">KRW</option>
-                        <option value="KZT">KZT</option>
-                        <option value="MXN">MXN</option>
-                        <option value="MYR">MYR</option>
-                        <option value="NOK">NOK</option>
-                        <option value="NZD">NZD</option>
-                        <option value="PAB">PAB</option>
-                        <option value="PEN">PEN</option>
-                        <option value="PHP">PHP</option>
-                        <option value="PKR">PKR</option>
-                        <option value="PLN">PLN</option>
-                        <option value="PYG">PYG</option>
-                        <option value="RON">RON</option>
-                        <option value="RUB">RUB</option>
-                        <option value="SAR">SAR</option>
-                        <option value="SEK">SEK</option>
-                        <option value="SGD">SGD</option>
-                        <option value="THB">THB</option>
-                        <option value="TRY">TRY</option>
-                        <option value="TWD">TWD</option>
-                        <option value="UAH">UAH</option>
-                        <option value="USD" selected>USD</option>
-                        <option value="UYU">UYU</option>
-                        <option value="VND">VND</option>
-                        <option value="ZAR">ZAR</option>
-                    </select>
-                    <i className="fa fa-caret-down fa-2x"></i>
-                    <input type="number" id="amount-one" placeholder={0} defaultValue={1} step={0.01}/>
-                </div>
-
+                {<SelectCurrency id='one'
+                                 update={update}
+                                 currency={currencies.c1.name}
+                                 amount={currencies.c1.amount}
+                                 currenciesList={currenciesList}
+                />}
                 <div className="swap-rate-container">
-                    <button className="btn" id="rate-btn">
+                    <button className="btn" id="rate-btn" onClick={swap}>
                         Swap
                     </button>
-                    <div className="rate" id="rate"></div>
+                    <div className="rate"
+                         id="rate">{`1 ${currencies.c1.name} = ${currencies.rate} ${currencies.c2.name}`}</div>
                 </div>
-
-                <div className="currency">
-                    <select id="currency-two">
-                        <option value="AED">AED</option>
-                        <option value="ARS">ARS</option>
-                        <option value="AUD">AUD</option>
-                        <option value="BGN">BGN</option>
-                        <option value="BRL">BRL</option>
-                        <option value="BSD">BSD</option>
-                        <option value="CAD">CAD</option>
-                        <option value="CHF">CHF</option>
-                        <option value="CLP">CLP</option>
-                        <option value="CNY">CNY</option>
-                        <option value="COP">COP</option>
-                        <option value="CZK">CZK</option>
-                        <option value="DKK">DKK</option>
-                        <option value="DOP">DOP</option>
-                        <option value="EGP">EGP</option>
-                        <option value="EUR">EUR</option>
-                        <option value="FJD">FJD</option>
-                        <option value="GBP">GBP</option>
-                        <option value="GTQ">GTQ</option>
-                        <option value="HKD">HKD</option>
-                        <option value="HRK">HRK</option>
-                        <option value="HUF">HUF</option>
-                        <option value="IDR">IDR</option>
-                        <option value="ILS">ILS</option>
-                        <option value="INR">INR</option>
-                        <option value="ISK">ISK</option>
-                        <option value="JPY">JPY</option>
-                        <option value="KRW">KRW</option>
-                        <option value="KZT">KZT</option>
-                        <option value="MXN">MXN</option>
-                        <option value="MYR">MYR</option>
-                        <option value="NOK">NOK</option>
-                        <option value="NZD">NZD</option>
-                        <option value="PAB">PAB</option>
-                        <option value="PEN">PEN</option>
-                        <option value="PHP">PHP</option>
-                        <option value="PKR">PKR</option>
-                        <option value="PLN">PLN</option>
-                        <option value="PYG">PYG</option>
-                        <option value="RON">RON</option>
-                        <option value="RUB">RUB</option>
-                        <option value="SAR">SAR</option>
-                        <option value="SEK">SEK</option>
-                        <option value="SGD">SGD</option>
-                        <option value="THB">THB</option>
-                        <option value="TRY">TRY</option>
-                        <option value="TWD">TWD</option>
-                        <option value="UAH">UAH</option>
-                        <option value="USD" selected>USD</option>
-                        <option value="UYU">UYU</option>
-                        <option value="VND">VND</option>
-                        <option value="ZAR">ZAR</option>
-                    </select>
-                    <i className="fa fa-caret-down fa-2x"></i>
-                    <input type="number" id="amount-two" defaultValue={1} step={0.01}/>
-                </div>
+                {<SelectCurrency id='two'
+                                 update={update}
+                                 currency={currencies.c2.name}
+                                 amount={currencies.c2.amount}
+                                 currenciesList={currenciesList}
+                />}
             </div>
         </body>
     )

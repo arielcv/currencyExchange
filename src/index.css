@@ -6,19 +6,6 @@
     box-sizing: border-box;
 }
 
-body{
-    background-color: lightgray;
-    font-family: Arial, 'sans-serif';
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-content: center;
-    align-items: center;
-    margin: 0;
-    height: 100vh;
-    padding: 60px;
-}
-
 h1{
     color: var(--primary-color);
     display: inline-block;
@@ -30,6 +17,20 @@ p{
     text-align: center;
     color: #2C2C2C;
     font-weight: bold;
+}
+
+
+body{
+    background-color: lightgray;
+    font-family: Arial, 'sans-serif';
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    margin: 0;
+    height: 100vh;
+    padding: 60px;
 }
 
 .container{
